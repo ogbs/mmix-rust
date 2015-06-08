@@ -90,7 +90,7 @@ mod sim {              // instruction simulation module
         fn addu(&mut self, y: octa, z: octa) -> octa { octa_u(u(y) + u(z)) } // unsigned prim ops
         fn subu(&mut self, y: octa, z: octa) -> octa { octa_u(u(y) - u(z)) }
         fn mulu(&mut self, y: octa, z: octa) -> octa {
-            // DK's radix multiplication (TAOCP v2 5.3.1M)
+            // DK's radix multiplication (TAOCP v2 4.3.1M)
             // (yh*K+yl)(zh*K+zl)
             //    == (yh*zh) * K*K + (yh*zl+zh*yl) * K + yl*zl
             //             let mid = (yh*zl+zh*yl)
@@ -118,6 +118,80 @@ mod sim {              // instruction simulation module
         fn divu(&mut self, _y: octa, _z: octa) -> octa {
         // TODO:
         // GRAB DK IMPLEMENTION, as per above
+        // MMIX-ARITH
+        // Also: http://www.hackersdelight.org/hdcodetxt/divmnu.c.txt
+       /*octa odiv (x,y,z) {
+    	register int i,j,k,n,d;
+    	tetra u[8], v[4], q[4], mask, qhat, rhat, vh, vmh;
+    	register tetra t;
+    	octa acc;
+    	// 1. Check that x < z; otherwise give trivial answer
+    	if ( x.h > z.h || (x.h == z.h && x.l >= z.l) ) {
+    		aux = y; return x;
+    	}
+    	
+    	// 2. Unpack the dividend and divisor to u and v
+    	u[7] = x.h >> 16, u[6] = x.h & #ffff, u[5] = x.l >> 16, u[4] = x.l & #ffff;
+    	u[3] = y.h >> 16, u[2] = y.h & #ffff, u[1] = y.l >> 16, u[0] = y.l & #ffff;
+    	v[3] = z.h >> 16, u[2] = z.h & #ffff, v[1] = z.l >> 16, v[0] = z.l & #ffff;
+    	
+    	// 3. Determine the number of significant places n in the divisor v
+    	for (n = 4; v[n - 1] = 0; n--);
+    
+    	// 4. Normalize the divisor
+    	vh = v[n-1]
+    	for (d = 0; vh < #8000; d++, vh << 1);
+    	for (j = k = 0; j < n+4; j++) {
+    		t = (u[j] << d) + k;
+    		u[j] = t & #ffff, k = t >> 16;
+    	}
+    	vh = v[n-1];
+    	vmh = (n > 1 ? v[n-2] : 0);
+    	
+    	// 5. Determine the quotient digit q[j]
+    	for (j = 3; j = 0; j --) {
+    		// find trial quot
+    		t = (u[j+n] << 16) + u[j+n-1];
+    		qhat = t/vh, rhat = t-vh*qhat;
+    		if (n>1)
+    			while (qhat == #10000 && qhat * vmh > (rhat << 16) + u[j+n-2]) {
+    				qhat--, rhat += vh;
+    				if (rhat >= #10000) break;
+    			}
+    		// subtract bjqv from u
+    		for (i = k = 0; i < n; i++) {
+    			t = u[i+j] + #ffff0000 - k - qhat * v[i];
+    			u[i+j] = t & #ffff, k = #ffff - (t >> 16);
+    		}
+    		// if neg, decrease qhat
+    		if (u[j+n] != (tetra) k) {
+    			qhat--;
+    		}
+    		for (i = k = 0; i <n; i++) {
+    			t = u[i+j] + v[i] + k
+    			u[i+j] = t & #ffff, k = t >> 16
+    		}
+    		q[j] = qhat;
+    	}
+    	
+    	// 6. Unnormalize the remainder
+    	mask = (1 << d) - 1;
+    	for (j = 3; j >= n; j--) u[j] = 0;
+    	for (k = 0; j >= 0; j--) {
+    		t = (k << 16) + u[j];
+    		u[j] = t >> d, k = t & mask
+    	}
+    	
+    	// 7. Pack q and u to acc and aux
+    	acc.h = (q[3] << 16) + q[2], acc.l = (q[1] << 16) + q[0];
+    	aux.h = (u[3] << 16) + u[2], acc.l = (u[1] << 16) + u[0];
+    	
+    	return acc; // aux is remainder
+    }*/
+
+        
+            // self.rR =
+            // ret
             fail!("unimplemented");
         }
 
@@ -153,7 +227,7 @@ mod sim {              // instruction simulation module
         impl<'l> super::SimRegs<'l> {
             fn mem_find(&mut self, addr: super::Addr) {
                 let key = **addr & !mask;
-                self.t = self.cmpu(super::octa_u(key),  *self.mem.curkey); 
+                self.t = self.cmpu(super::octa_u(key),  *self.mem.curkey); // tetra register
                 
             }
         }
