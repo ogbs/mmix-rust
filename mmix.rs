@@ -2,6 +2,7 @@
 
 mod sim {              // instruction simulation module 
     struct octa(u64);  // an octabyte
+    // struct tetra(u32);  // a tetrabyte
     struct regn(u8);   // number of registers
     struct Addr(octa); // address bus
 
@@ -115,7 +116,27 @@ mod sim {              // instruction simulation module
             self.rH = octa_u(result_upper);
             octa_u(result_lower)
         }
-        fn divu(&mut self, _y: octa, _z: octa) -> octa {
+        fn divu(&mut self, x: octa, y: octa, z: octa) -> octa {
+        // Naive implementation
+            fn lo(a:u64) -> u64 { a & 0xffff_ffff } // find bitwise complement
+            fn hi(a:u64) -> u64 { a >> 32 } // shift bits
+            
+            let x_lo = lo(*x);
+            let x_hi = hi(*x);
+            let y_lo = lo(*y);
+            let y_hi = hi(*y);
+            let z_lo = lo(*z);
+            let z_hi = hi(*z);
+        // trivial exit here
+        
+        
+        // Unpack dividend and divisor
+        // vectorize?
+        let u: [u32, 8] =  [y_low & #ffff, y_low >> 16, y_hi & #ffff, y_hi >> 16,
+                            x_low & #ffff, x_low >> 16, x_hi & #ffff, x_hi >> 16]
+        let v: [u32, 4] = [z_low & #ffff, z_low >> 16, z_hi & #ffff, z_hi >> 16]
+            
+        
         // TODO:
         // GRAB DK IMPLEMENTION, as per above
         // MMIX-ARITH
@@ -133,7 +154,7 @@ mod sim {              // instruction simulation module
     	// 2. Unpack the dividend and divisor to u and v
     	u[7] = x.h >> 16, u[6] = x.h & #ffff, u[5] = x.l >> 16, u[4] = x.l & #ffff;
     	u[3] = y.h >> 16, u[2] = y.h & #ffff, u[1] = y.l >> 16, u[0] = y.l & #ffff;
-    	v[3] = z.h >> 16, u[2] = z.h & #ffff, v[1] = z.l >> 16, v[0] = z.l & #ffff;
+    	v[3] = z.h >> 16, v[2] = z.h & #ffff, v[1] = z.l >> 16, v[0] = z.l & #ffff;
     	
     	// 3. Determine the number of significant places n in the divisor v
     	for (n = 4; v[n - 1] = 0; n--);
